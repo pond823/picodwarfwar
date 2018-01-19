@@ -14,6 +14,7 @@ __lua__
 	game.dy =0 
 	game.timer = 1
    game.tick = 1
+   game.msg = "hello world"
 
 	sprites = {}
 	structures ={}
@@ -39,12 +40,14 @@ __lua__
 		x = 8,
 		y = 3,
 		build = 1, -- castle
+		spr = 18,
 		resources = {
 			food = 10,
 			stone = 10,
 			wood = 10
 			}	
 		}
+		castle.name = randomcastle()
 		add (structures, castle)
 	end
 
@@ -52,23 +55,34 @@ __lua__
 	function mapselect()
 		update_timer()
 		foreach(sprites, update_sprite)
-  		if (btnp(0)) then game.cursor.x-=game.cursor.inc end
-	 	if (btnp(1)) then game.cursor.x+=game.cursor.inc end
-	 	if (btnp(2)) then game.cursor.y-=game.cursor.inc end
-	 	if (btnp(3)) then game.cursor.y+=game.cursor.inc end
+  		if (btnp(0)) then game.cursor.x-=1 end
+	 	if (btnp(1)) then game.cursor.x+=1 end
+	 	if (btnp(2)) then game.cursor.y-=1 end
+	 	if (btnp(3)) then game.cursor.y+=1 end
 	end
 
 	function drawmapview( ... )
 		map(0,0,0,0,10,10);
 		foreach(sprites, sprite_draw)
 		foreach(structures, drawstructures)
-		spr(32, game.cursor.x, game.cursor.y)
+		spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
+		drawmessage()
 	end
 
 	function drawstructures( structure )
-		spr(18, structure.x*8, structure.y*8)
+		spr(structure.spr, structure.x*8, structure.y*8)
+		if (game.cursor.x == structure.x and game.cursor.y == structure.y) then
+			game.msg = structure.name
+		else
+			game.msg = ""
+		end
 	end
 
+
+
+	function drawmessage()
+		print(game.msg, 0,90, 5)
+	end
 
 --
 -- sprite code
@@ -132,6 +146,19 @@ end
 -- end of sprite code
 --
 
+-- name gen code
+
+function randomcastle()
+	local a = {"khaz", "dur", "dun", "kharak","cral"}
+	local b = {"zog", "dum", "dag", "kar", "vog", "hurn"}
+	local c = {"dehad","gordum","fast","fort", "hold" }
+	local i1 = flr(rnd(#a-1))+1
+	local i2 = flr(rnd(#b-1))+1
+	local i3 = flr(rnd(#c-1))+1
+	s = a[i1]..b[i2]..c[i3]
+	game.msg = s
+	return s
+end
 
 __gfx__
 00000000b3bbb3b0bbbbbbb0bbbbbbb09999999066666660ccccccc00000000000000000b3bbbbb0666666600000000000000000000000000000000000000000

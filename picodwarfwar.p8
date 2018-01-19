@@ -13,9 +13,10 @@ __lua__
 	game.dx =0 --world view delta change
 	game.dy =0 
 	game.timer = 1
- game.tick = 1
+   game.tick = 1
 
 	sprites = {}
+	structures ={}
 	 
 	function _init( ... )
 		createinitialcastle()
@@ -34,7 +35,17 @@ __lua__
 
 	--init functions
 	function createinitialcastle( ... )
-		-- body
+		castle = {
+		x = 8,
+		y = 3,
+		build = 1, -- castle
+		resources = {
+			food = 10,
+			stone = 10,
+			wood = 10
+			}	
+		}
+		add (structures, castle)
 	end
 
 	--update functions
@@ -50,9 +61,13 @@ __lua__
 	function drawmapview( ... )
 		map(0,0,0,0,10,10);
 		foreach(sprites, sprite_draw)
+		foreach(structures, drawstructures)
 		spr(32, game.cursor.x, game.cursor.y)
 	end
 
+	function drawstructures( structure )
+		spr(18, structure.x*8, structure.y*8)
+	end
 
 
 --

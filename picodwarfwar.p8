@@ -71,6 +71,7 @@ __lua__
 
 	function drawstructures( structure )
 		spr(structure.spr, structure.x*8, structure.y*8)
+		rect((structure.x*8)-1,(structure.y*8)-1, (structure.x*8)+7, (structure.y*8)+7,8) 
 		if (game.cursor.x == structure.x and game.cursor.y == structure.y) then
 			game.msg = structure.name
 		else

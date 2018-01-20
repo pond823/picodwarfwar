@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 8
+version 11
 __lua__
 --pico dwarf war
 --by sasha bilton
@@ -18,25 +18,26 @@ __lua__
 
 	sprites = {}
 	structures ={}
-	 
+
 	function _init( ... )
-		createinitialcastle()
-		new_sprite(16,16,10,{41,42,43}, 1, 0, 0)
+		printh("Initialising", "log.txt", true)
+		create_initial_castle()
+		new_sprite(16,16,10,{41,42,43}, 1, 0, 0) -- Test animations are working
 
 	end
 	
 	function _update()
-  		if (game.state == 1) then mapselect() end
+  		if (game.state == 1) then map_select() end
 	end
 
 	function _draw()
 		cls()
-		if (game.state == 1) then drawmapview() end
+		if (game.state == 1) then draw_map_view() end
 	end
 
 	--init functions
-	function createinitialcastle( ... )
-		castle = {
+	function create_initial_castle()
+		local castle = {
 		x = 8,
 		y = 3,
 		build = 1, -- castle
@@ -47,12 +48,30 @@ __lua__
 			wood = 10
 			}	
 		}
-		castle.name = randomcastle()
+		castle.name = random_castle()
 		add (structures, castle)
+
+		local castle2 = {
+		x = 5,
+		y = 7,
+		build = 1, -- castle
+		spr = 18,
+		resources = {
+			food = 10,
+			stone = 10,
+			wood = 10
+			}	
+		}
+		castle2.name = random_castle()
+		add (structures, castle2)
+		log("castle")
+		log(structures[1].name.." "..structures[1].x.."/"..structures[1].y)
+		log("castle2")
+		log(structures[2].name.." "..structures[2].x.."/"..structures[2].y)
 	end
 
 	--update functions
-	function mapselect()
+	function map_select()
 		update_timer()
 		foreach(sprites, update_sprite)
   		if (btnp(0)) then game.cursor.x-=1 end
@@ -61,28 +80,33 @@ __lua__
 	 	if (btnp(3)) then game.cursor.y+=1 end
 	end
 
-	function drawmapview( ... )
+	--draw fu
+	function draw_map_view( ... )
+		game.msg = ""
 		map(0,0,0,0,10,10);
 		foreach(sprites, sprite_draw)
-		foreach(structures, drawstructures)
+		foreach(structures, draw_structures)
 		spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
-		drawmessage()
+		draw_message_box()
+		draw_message()
 	end
 
-	function drawstructures( structure )
+	function draw_structures( structure )
 		spr(structure.spr, structure.x*8, structure.y*8)
 		rect((structure.x*8)-1,(structure.y*8)-1, (structure.x*8)+7, (structure.y*8)+7,8) 
-		if (game.cursor.x == structure.x and game.cursor.y == structure.y) then
-			game.msg = structure.name
-		else
-			game.msg = ""
+	
+		if game.cursor.x == structure.x and game.cursor.y == structure.y then
+			game.msg = structure.name.." "..structure.x.."/"..structure.y
+			log("str "..structure.name..structure.x.."/"..structure.y)
 		end
 	end
 
+	function draw_message_box()
+		rect(0,81,127,127,2)
+	end
 
-
-	function drawmessage()
-		print(game.msg, 0,90, 5)
+	function draw_message()
+		print(game.msg, 2,83, 5)
 	end
 
 --
@@ -149,16 +173,20 @@ end
 
 -- name gen code
 
-function randomcastle()
+function random_castle()
 	local a = {"khaz", "dur", "dun", "kharak","cral"}
 	local b = {"zog", "dum", "dag", "kar", "vog", "hurn"}
 	local c = {"dehad","gordum","fast","fort", "hold" }
 	local i1 = flr(rnd(#a-1))+1
 	local i2 = flr(rnd(#b-1))+1
 	local i3 = flr(rnd(#c-1))+1
-	s = a[i1]..b[i2]..c[i3]
+	local s = a[i1]..b[i2]..c[i3]
 	game.msg = s
 	return s
+end
+
+function log(msg)
+	printh(time()..":"..msg, "log.txt")
 end
 
 __gfx__

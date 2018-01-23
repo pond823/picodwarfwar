@@ -226,6 +226,8 @@ function structure_resources(structure)
 	for lx = structure.x-1, structure.x+1 do
 		for ly = structure.y-1, structure.y+1 do
 
+			local loc = mget(lx,ly)
+			-- 1 = plains, 2 = forest, 3= farmland, 4=hills, 5=mountains, 6=sea, 9= faerie ring, 10= cave 
 			-- calculate surround resources
 		end
 	end

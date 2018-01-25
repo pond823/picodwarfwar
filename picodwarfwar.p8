@@ -29,9 +29,9 @@ __lua__
 	}
 
 	function _init( ... )
-		printh("Initialising", "log.txt", true)
+		printh("initialising", "log.txt", true)
 		create_initial_castle()
-		--new_sprite(16,16,10,{41,42,43}, 1, 0, 0) -- Test animations are working
+		--new_sprite(16,16,10,{41,42,43}, 1, 0, 0) -- test animations are working
 		calculate_total()
 	end
 	
@@ -53,10 +53,10 @@ __lua__
 		owner = 1, --player
 		spr = 18, --sprite to display
 		resources = {
-			food = 10,
-			stone = 10,
-			wood = 10,
-			iron = 10
+			food = 0,
+			stone = 0,
+			wood = 0,
+			iron = 0
 			}	
 		}
 		castle.name = random_castle()
@@ -69,10 +69,10 @@ __lua__
 		owner =1,
 		spr = 18,
 		resources = {
-			food = 10,
-			stone = 10,
-			wood = 10,
-			iron = 10
+			food = 0,
+			stone = 0,
+			wood = 0,
+			iron = 0
 			}	
 		}
 		castle2.name = random_castle()
@@ -229,6 +229,23 @@ function structure_resources(structure)
 			local loc = mget(lx,ly)
 			-- 1 = plains, 2 = forest, 3= farmland, 4=hills, 5=mountains, 6=sea, 9= faerie ring, 10= cave 
 			-- calculate surround resources
+    structure.resources.food +=1 -- everything gives at least 1 food
+    if (loc == 1) then
+      structure.resources.food +=1
+      structure.resources.wood +=1
+     elseif (loc == 2) then
+       structure.resources.wood +=3
+     elseif (loc==3) then
+      structure.resources.food +=2
+     elseif (loc==4) then
+      structure.resources.iron +=2
+      structure.resources.stone +=1
+     elseif (loc==5) then
+      structure.resources.iron +=1
+      structure.resources.stone +=3
+     elseif (loc==6) then
+      structure.resources.food +=2
+     end
 		end
 	end
 end

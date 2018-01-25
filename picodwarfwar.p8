@@ -91,12 +91,31 @@ __lua__
 	 	if (btnp(1)) then game.cursor.x+=1 end
 	 	if (btnp(2)) then game.cursor.y-=1 end
 	 	if (btnp(3)) then game.cursor.y+=1 end
+
+   if (game.cursor.x<0) then 
+    game.cursor.x=0 
+    if (game.dx >0 ) then game.dx-=1 end
+   end
+   if (game.cursor.y<0) then 
+    game.cursor.y=0 
+    if (game.dy >0 ) then game.dy-=1 end
+   end
+   if (game.cursor.x>9) then 
+    game.cursor.x=9 
+    if (game.dx <32 ) then game.dx+=1 end
+   end
+   if (game.cursor.y>9) then 
+    game.cursor.y=9 
+    if (game.dy <32 ) then game.dy+=1 end
+   end
+
+
 	end
 
-	--draw fu
+	--draw functions
 	function draw_map_view( ... )
 		game.msg = ""
-		map(0,0,0,0,10,10)
+		map(game.dx,game.dy,0,0,10,10)
 		foreach(sprites, sprite_draw)
 		foreach(structures, draw_structures)
 		spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
@@ -106,10 +125,10 @@ __lua__
 	end
 
 	function draw_structures( structure )
-		spr(structure.spr, structure.x*8, structure.y*8)
-		rect((structure.x*8)-1,(structure.y*8)-1, (structure.x*8)+7, (structure.y*8)+7,8) 
+		spr(structure.spr, structure.x*8 - game.dx*8, structure.y*8 - game.dy*8)
+		rect((structure.x*8)-1 - game.dx*8,(structure.y*8)-1- game.dy*8, (structure.x*8)+7- game.dx*8, (structure.y*8)+7- game.dy*8,8) 
 	
-		if (game.cursor.x == structure.x and game.cursor.y == structure.y) then
+		if (game.cursor.x+ game.dx == structure.x and game.cursor.y+game.dy == structure.y) then
 			game.msg = structure.name.." "..structure.x.."/"..structure.y
 			log("str "..structure.name..structure.x.."/"..structure.y)
 			game.selected_structure = structure

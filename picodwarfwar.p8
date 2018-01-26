@@ -13,9 +13,10 @@ __lua__
 	game.dx =0 --world view delta change
 	game.dy =0 
 	game.timer = 1
-   game.tick = 1
-   game.msg = "hello world"
-   game.selected_structure = nil
+ game.tick = 1
+ game.msg = "hello world"
+ game.selected_structure = nil
+ game.path = nil
 
 	sprites = {}
 	structures ={}
@@ -33,15 +34,17 @@ __lua__
 		create_initial_castle()
 		new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
 		calculate_total()
+  game.path = a_getpath({structures[1].x, structures[1].y},{structures[2].x, structures[2].y} )
+  log("path size "..#path)
 	end
 	
 	function _update()
-  		if (game.state == 1) then map_select() end
+  		if (game.state == 1) map_select()
 	end
 
 	function _draw()
 		cls()
-		if (game.state == 1) then draw_map_view() end
+		if (game.state == 1) draw_map_view()
 	end
 
 	--init functions
@@ -87,10 +90,10 @@ __lua__
 	function map_select()
 		update_timer()
 		foreach(sprites, update_sprite)
-  		if (btnp(0)) then game.cursor.x-=1 end
-	 	if (btnp(1)) then game.cursor.x+=1 end
-	 	if (btnp(2)) then game.cursor.y-=1 end
-	 	if (btnp(3)) then game.cursor.y+=1 end
+  	if (btnp(0)) game.cursor.x-=1 
+	 	if (btnp(1)) game.cursor.x+=1 
+	 	if (btnp(2)) game.cursor.y-=1 
+	 	if (btnp(3)) game.cursor.y+=1
 
    if (game.cursor.x<0) then 
     game.cursor.x=0 
@@ -108,24 +111,20 @@ __lua__
     game.cursor.y=9 
     if (game.dy <32 ) then game.dy+=1 end
    end
-
    sprites[1].x = game.cursor.x*game.cursor.inc
    sprites[1].y = game.cursor.y*game.cursor.inc
-
-
-
 	end
 
 	--draw functions
 	function draw_map_view( ... )
 		game.msg = ""
 		map(game.dx,game.dy,0,0,10,10)
-
 		foreach(structures, draw_structures)
 		--spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
 		draw_message_box()
 		draw_message()
 		draw_info_box()
+  draw_path()
   foreach(sprites, sprite_draw)
 	end
 
@@ -142,6 +141,10 @@ __lua__
 
 	function draw_message_box()
 		rect(0,81,127,127,2)
+  if(game.selected_structure != nil) then 
+   print(game.selected_structure.name, 2,83, 5)
+   draw_resources(0,90, game.selected_structure.resources)
+  end
 	end
 
 	function draw_message()
@@ -150,16 +153,29 @@ __lua__
 
 	function draw_info_box()
 		rect(80,0,127,81,2)
-		spr(50, 81,0)
-		print(totals.resources.food, 90,2,5)
-		spr(48,81,8)
-		print(totals.resources.iron, 90,9,5)
-		spr(49,81,15)
-		print(totals.resources.stone, 90, 17, 5)
-		spr(51,81,23)
-		print(totals.resources.wood, 90, 25, 5)
+		draw_resources(81,0, totals.resources)
 	end
 
+ function draw_resources(x,y, resources)
+  spr(50, x,y)
+  print(resources.food, x+9,y+2,5)
+  spr(48,x,y+8)
+  print(resources.iron, x+9,y+9,5)
+  spr(49,x,y+15)
+  print(resources.stone, x+9, y+17, 5)
+  spr(51,x,y+23)
+  print(resources.wood, x+9, y+25, 5)
+ end
+
+ function draw_path()
+  if (game.path != nil) then
+   for point in all(game.path) do
+   log("path "..point[1].."/"..point[2])
+ 
+    spr(36,point[1]*8,point[2]*8)
+   end
+  end
+ end
 --
 -- sprite code
 --
@@ -283,6 +299,168 @@ function total_resources(structure)
 	end
 end
 
+-- a* pathfinding based on the work of @richy486
+function a_getpath(start, goal) -- returns path{x,y}
+ wallid = 6
+ frontier = {}
+ a_insert(frontier, start, 0)
+ came_from = {}
+ came_from[a_vectoindex(start)] = nil
+ cost_so_far = {}
+ cost_so_far[a_vectoindex(start)] = 0
+
+ while (#frontier > 0 and #frontier < 1000) do
+  current = a_popend(frontier)
+
+  if a_vectoindex(current) == a_vectoindex(goal) then
+   break
+  end
+
+  local neighbours = a_getneighbours(current)
+  for next in all(neighbours) do
+   local nextindex = a_vectoindex(next)
+  
+   local new_cost = cost_so_far[a_vectoindex(current)]  + 1 -- add extra costs here
+
+   if (cost_so_far[nextindex] == nil) or (new_cost < cost_so_far[nextindex]) then
+    cost_so_far[nextindex] = new_cost
+    local priority = new_cost + a_heuristic(goal, next)
+    a_insert(frontier, next, priority)
+    
+    came_from[nextindex] = current
+   end 
+  end
+ end
+
+ printh("find goal..")
+ current = came_from[a_vectoindex(goal)]
+ path = {}
+ local cindex = a_vectoindex(current)
+ local sindex = a_vectoindex(start)
+
+ while cindex != sindex do
+  add(path, current)
+  current = came_from[cindex]
+  cindex = a_vectoindex(current)
+ end
+ a_reverse(path)
+ return path
+end
+
+-- manhattan distance on a square grid
+function a_heuristic(a, b)
+ return abs(a[1] - b[1]) + abs(a[2] - b[2])
+end
+
+-- find all existing neighbours of a position that are not walls
+function a_getneighbours(pos)
+ local neighbours={}
+ local x = pos[1]
+ local y = pos[2]
+ if x > 0 and (mget(x-1,y) != wallid) then
+  add(neighbours,{x-1,y})
+ end
+ if x < 32 and (mget(x+1,y) != wallid) then
+  add(neighbours,{x+1,y})
+ end
+ if y > 0 and (mget(x,y-1) != wallid) then
+  add(neighbours,{x,y-1})
+ end
+ if y < 32 and (mget(x,y+1) != wallid) then
+  add(neighbours,{x,y+1})
+ end
+
+ -- for making diagonals
+ if (x+y) % 2 == 0 then
+  a_reverse(neighbours)
+ end
+ return neighbours
+end
+
+-- find the first location of a specific tile type
+function a_getspecialtile(tileid)
+ for x=0,15 do
+  for y=0,15 do
+   local tile = mget(x,y)
+   if tile == tileid then
+    return {x,y}
+   end
+  end
+ end
+ printh("did not find tile: "..tileid)
+end
+
+-- a_insert into start of table
+function a_insert(t, val)
+ for i=(#t+1),2,-1 do
+  t[i] = t[i-1]
+ end
+ t[1] = val
+end
+
+-- a_insert into table and sort by priority
+function a_insert(t, val, p)
+ if #t >= 1 then
+  add(t, {})
+  for i=(#t),2,-1 do
+   
+   local next = t[i-1]
+   if p < next[2] then
+    t[i] = {val, p}
+    return
+   else
+    t[i] = next
+   end
+  end
+  t[1] = {val, p}
+ else
+  add(t, {val, p}) 
+ end
+end
+
+-- a_pop the last element off a table
+function a_popend(t)
+ local top = t[#t]
+ del(t,t[#t])
+ return top[1]
+end
+
+function a_reverse(t)
+ for i=1,(#t/2) do
+  local temp = t[i]
+  local oppindex = #t-(i-1)
+  t[i] = t[oppindex]
+  t[oppindex] = temp
+ end
+end
+
+-- translate a 2d x,y coordinate to a 1d index and back again
+function a_vectoindex(vec)
+ return a_maptoindex(vec[1],vec[2])
+end
+function a_maptoindex(x, y)
+ return ((x+1) * 16) + y
+end
+function a_indextomap(index)
+ local x = (index-1)/16
+ local y = index - (x*w)
+ return {x,y}
+end
+
+-- a_pop the first element off a table (unused
+function a_pop(t)
+ local top = t[1]
+ for i=1,(#t) do
+  if i == (#t) then
+   del(t,t[i])
+  else
+   t[i] = t[i+1]
+  end
+ end
+ return top
+end
+
+
 
 __gfx__
 00000000b3bbb3b0bbbbbbb0bbbbbbb09999999066666660ccccccc00000000000000000b3bbbbb0666666600000000000000000000000000000000000000000
@@ -303,10 +481,10 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000001001000050050000f00f04000000000000000000000000000000000000000000000000
 aa0aa0aa5000000500000000000000d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 a000000a0000000000d0000000000dd0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000dd000000000dd00000000000000000000000000000000000000000000088000000000000000000000000000000000000000000000000000
-a000000a00000000000d00000d0dd000000000000000000000000000000000000000000000888800000880000000000000000000000000000000000000000000
-a000000a000000000000d0d000dd0000000000000000000000000000000000000000000000888800000880000000800000000000000000000000000000000000
-000000000000000000000dd00ddd0000000000000000000008000000bbb0000000f0000000088000000000000000000000000000000000000000000000000000
+00000000000000000dd000000000dd00000111000000000000000000000000000000000000088000000000000000000000000000000000000000000000000000
+a000000a00000000000d00000d0dd0000011d1000000000000000000000000000000000000888800000880000000000000000000000000000000000000000000
+a000000a000000000000d0d000dd0000001dd1000000000000000000000000000000000000888800000880000000800000000000000000000000000000000000
+000000000000000000000dd00ddd0000001111000000000008000000bbb0000000f0000000088000000000000000000000000000000000000000000000000000
 a000000a000000000000ddd0dd00d000000000000000000088800000bbb000000ff0000000000000000000000000000000000000000000000000000000000000
 aa0aa0aa5000000500000000000000000000000000000000080000000b000000fff0000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

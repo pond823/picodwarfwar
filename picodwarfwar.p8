@@ -29,6 +29,8 @@ __lua__
 		}
 	}
 
+ dwarves={}
+
 	function _init( ... )
 		printh("initialising", "log.txt", true)
 		create_initial_castle()
@@ -86,6 +88,25 @@ __lua__
 		log(structures[2].name.." "..structures[2].x.."/"..structures[2].y)
 	end
 
+ function create_initial_dwarves() 
+  local dwarf = {
+   x = structures[1].x
+   y = structures[1].y
+   warriors = 2
+   elves = 0
+   dragons = 0
+   weapons = 0
+   armour = 0
+   resources = {
+    food = 10,
+    stone = 0,
+    wood = 0,
+    iron = 0
+   } 
+  }
+ end
+
+
 	--update functions
 	function map_select()
 		update_timer()
@@ -134,7 +155,6 @@ __lua__
 	
 		if (game.cursor.x+ game.dx == structure.x and game.cursor.y+game.dy == structure.y) then
 			game.msg = structure.name.." "..structure.x.."/"..structure.y
-			log("str "..structure.name..structure.x.."/"..structure.y)
 			game.selected_structure = structure
 		end
 	end
@@ -170,8 +190,6 @@ __lua__
  function draw_path()
   if (game.path != nil) then
    for point in all(game.path) do
-   log("path "..point[1].."/"..point[2])
- 
     spr(36,point[1]*8,point[2]*8)
    end
   end

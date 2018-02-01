@@ -40,6 +40,7 @@ __lua__
   game.path = a_getpath({structures[1].x, structures[1].y},{structures[2].x, structures[2].y} )
   log("path size "..#game.path)
   log("dwarves "..armies[1].warriors)
+  log("castle 1 "..structures[1].x.."/"..structures[1].y)
 	end
 	
 	function _update()
@@ -122,19 +123,19 @@ __lua__
 
    if (game.cursor.x<0) then 
     game.cursor.x=0 
-    if (game.dx >0 ) then game.dx-=1 end
+    if (game.dx >0 ) game.dx-=1 
    end
    if (game.cursor.y<0) then 
     game.cursor.y=0 
-    if (game.dy >0 ) then game.dy-=1 end
+    if (game.dy >0 ) game.dy-=1
    end
    if (game.cursor.x>9) then 
     game.cursor.x=9 
-    if (game.dx <32 ) then game.dx+=1 end
+    if (game.dx <32 ) game.dx+=1
    end
    if (game.cursor.y>9) then 
     game.cursor.y=9 
-    if (game.dy <32 ) then game.dy+=1 end
+    if (game.dy <32 ) game.dy+=1
    end
    sprites[1].x = game.cursor.x*game.cursor.inc
    sprites[1].y = game.cursor.y*game.cursor.inc
@@ -145,6 +146,7 @@ __lua__
 		game.msg = ""
 		map(game.dx,game.dy,0,0,10,10)
 		foreach(structures, draw_structures)
+  foreach(armies, draw_army)
 		--spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
 		draw_message_box()
 		draw_message()
@@ -168,8 +170,12 @@ __lua__
   if(game.selected_structure != nil) then 
    print(game.selected_structure.name, 2,83, 5)
    draw_resources(0,90, game.selected_structure.resources)
+   local army = army_at_structure(game.selected_structure)
+   if (army != nil) draw_army_info( 32, 90, army)
   end
 	end
+
+
 
 	function draw_message()
 		print(game.msg, 2,83, 5)
@@ -178,7 +184,6 @@ __lua__
 	function draw_info_box()
 		rect(80,0,127,81,2)
 		draw_resources(81,0, totals.resources)
-  draw_army(81, 31, armies[1])
 	end
 
  function draw_resources(x,y, resources)
@@ -200,7 +205,15 @@ __lua__
   end
  end
 
- function draw_army(x,y,army) 
+ function draw_army(army)
+ local atcastle = false
+  for i = 1, #structures do
+   if (structures[i].x == army.x and structures[i].y == army.y) atcastle = true
+   if (atcastle == false)  spr(21, army.x*8 - game.dx*8, army.y*8 - game.dy*8)
+  end
+ end
+
+ function draw_army_info(x,y,army) 
   if(army != nil) then
 
    spr(21, x, y)
@@ -211,11 +224,18 @@ __lua__
    print(army.dragons,x+9 ,y+18)
    spr(28, x, y+24)
    print(army.weapons, x+9, y+26)
-   spr(29, x, y+32)
-   print(army.armour, x +9, y+34)
+   spr(29, x+15, y+24)
+   print(army.armour, x +24, y+26)
    
   end
  end
+
+
+function army_at_structure(structure)
+  for i=1, #armies do
+   if (armies[i].x == structure.x and armies[i].y == structure.y) return armies[i]
+  end
+end
 --
 -- sprite code
 --

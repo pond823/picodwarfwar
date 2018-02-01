@@ -90,13 +90,14 @@ __lua__
 
  function create_initial_dwarves() 
   local dwarf = {
-   x = structures[1].x
-   y = structures[1].y
-   warriors = 2
-   elves = 0
-   dragons = 0
-   weapons = 0
-   armour = 0
+   x = structures[1].x,
+   y = structures[1].y,
+   moves = 4,
+   warriors = 2,
+   elves = 0,
+   dragons = 0,
+   weapons = 0,
+   armour = 0,
    resources = {
     food = 10,
     stone = 0,

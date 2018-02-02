@@ -124,6 +124,9 @@ __lua__
 	 	if (btnp(1)) game.cursor.x+=1 
 	 	if (btnp(2)) game.cursor.y-=1 
 	 	if (btnp(3)) game.cursor.y+=1
+   game.selected_structure = structure_at_location(game.cursor.x, game.cursor.y)
+   game.selected_army = army_at_location(game.cursor.x, game.cursor.y)
+
    if (btnp(4)) select_action()
 
    if (game.cursor.x<0) then 
@@ -148,10 +151,6 @@ __lua__
 	end
 
  function select_action()
-  -- is there a structure under the cursor?
-  game.selected_structure = structure_at_location(game.cursor.x, game.cursor.y)
-  -- is there an army under the cursors?
-  game.selected_army = army_at_location(game.cursor.x, game.cursor.y)
   game.options.draw = 1
   game.state = 2
    -- draw code
@@ -252,13 +251,13 @@ end
  function structure_at_location(x,y)
   for i=1,#structures do
    log("structs "..structures[i].name)
-   if (structures[1].x == x and structures[1].y == y) return structures[i]
+   if (structures[i].x == x and structures[i].y == y) return structures[i]
   end
  end
 
  function army_at_location(x,y)
   for i=1,#armies do
-   if (armies[1].x == x and armies[1].y == y) return armies[i]
+   if (armies[i].x == x and armies[i].y == y) return armies[i]
   end
  end
 --

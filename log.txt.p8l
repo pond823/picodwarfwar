@@ -1,8 +1,11 @@
 initialising
 0.0333:castle
-0.0333:kharakzogfast 8/3
+0.0333:khazkardehad 8/3
 0.0333:castle2
-0.0333:khazdagfast 5/7
+0.0333:khazkargordum 5/7
 0.0333:path size 6
 0.0333:dwarves 2
 0.0333:castle 1 8/3
+1.6333:structs khazkardehad
+1.6333:structs khazkargordum
+57.9667:structs khazkardehad

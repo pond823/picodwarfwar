@@ -14,10 +14,13 @@ __lua__
 	game.dy =0 
 	game.timer = 1
  game.tick = 1
- game.msg = "hello world"
  game.selected_structure = nil
  game.path = nil
+ game.options={}
+ game.options.draw =0
 
+ options = {"train warriors", "build smithy", "build armoury", "move resources"}
+ selected = 1
 	sprites = {}
 	structures ={}
 	totals = {
@@ -45,11 +48,12 @@ __lua__
 	
 	function _update()
   		if (game.state == 1) map_select()
+    if (game.state == 2) select_options()
 	end
 
 	function _draw()
 		cls()
-		if (game.state == 1) draw_map_view()
+		draw_map_view()
 	end
 
 	--init functions
@@ -120,6 +124,7 @@ __lua__
 	 	if (btnp(1)) game.cursor.x+=1 
 	 	if (btnp(2)) game.cursor.y-=1 
 	 	if (btnp(3)) game.cursor.y+=1
+   if (btnp(4)) select_action()
 
    if (game.cursor.x<0) then 
     game.cursor.x=0 
@@ -139,7 +144,22 @@ __lua__
    end
    sprites[1].x = game.cursor.x*game.cursor.inc
    sprites[1].y = game.cursor.y*game.cursor.inc
+
 	end
+
+ function select_action()
+  -- is there a structure under the cursor?
+  game.selected_structure = structure_at_location(game.cursor.x, game.cursor.y)
+  -- is there an army under the cursors?
+  game.selected_army = army_at_location(game.cursor.x, game.cursor.y)
+  game.options.draw = 1
+  game.state = 2
+   -- draw code
+
+ end
+
+
+
 
 	--draw functions
 	function draw_map_view( ... )
@@ -149,20 +169,16 @@ __lua__
   foreach(armies, draw_army)
 		--spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
 		draw_message_box()
-		draw_message()
 		draw_info_box()
   draw_path()
   foreach(sprites, sprite_draw)
+
+  if (game.options.draw == 1) draw_options()
 	end
 
 	function draw_structures( structure )
 		spr(structure.spr, structure.x*8 - game.dx*8, structure.y*8 - game.dy*8)
 		rect((structure.x*8)-1 - game.dx*8,(structure.y*8)-1- game.dy*8, (structure.x*8)+7- game.dx*8, (structure.y*8)+7- game.dy*8,8) 
-	
-		if (game.cursor.x+ game.dx == structure.x and game.cursor.y+game.dy == structure.y) then
-			game.msg = structure.name.." "..structure.x.."/"..structure.y
-			game.selected_structure = structure
-		end
 	end
 
 	function draw_message_box()
@@ -173,12 +189,6 @@ __lua__
    local army = army_at_structure(game.selected_structure)
    if (army != nil) draw_army_info( 32, 90, army)
   end
-	end
-
-
-
-	function draw_message()
-		print(game.msg, 2,83, 5)
 	end
 
 	function draw_info_box()
@@ -206,10 +216,12 @@ __lua__
  end
 
  function draw_army(army)
- local atcastle = false
-  for i = 1, #structures do
-   if (structures[i].x == army.x and structures[i].y == army.y) atcastle = true
-   if (atcastle == false)  spr(21, army.x*8 - game.dx*8, army.y*8 - game.dy*8)
+ if (army != nil) then
+  local atcastle = false
+   for i = 1, #structures do
+    if (structures[i].x == army.x and structures[i].y == army.y) atcastle = true
+    if (atcastle == false)  spr(21, army.x*8 - game.dx*8, army.y*8 - game.dy*8)
+   end
   end
  end
 
@@ -236,6 +248,19 @@ function army_at_structure(structure)
    if (armies[i].x == structure.x and armies[i].y == structure.y) return armies[i]
   end
 end
+
+ function structure_at_location(x,y)
+  for i=1,#structures do
+   log("structs "..structures[i].name)
+   if (structures[1].x == x and structures[1].y == y) return structures[i]
+  end
+ end
+
+ function army_at_location(x,y)
+  for i=1,#armies do
+   if (armies[1].x == x and armies[1].y == y) return armies[i]
+  end
+ end
 --
 -- sprite code
 --
@@ -366,6 +391,45 @@ function total_resources(structure)
 		totals.resources.wood += structure.resources.wood
 	end
 end
+
+--
+-- options code
+--
+function draw_options()
+  
+  if (#options>0) then
+    oy = (64 - (#options * 6)/2)
+    ox = 32
+    rectfill(ox-7,oy-1,ox+65,65+((#options * 6)/2),0)
+    rect(ox-7,oy-1,ox+65,65+((#options * 6)/2),2)
+    for n= 1,#options do
+      if (selected == n) then
+        print(">"..options[n],ox-6,oy,9)
+      else 
+        print(options[n],ox,oy,12)
+      end
+      oy += 6
+    end
+  end
+end
+
+
+function select_options()
+
+  if (btnp(2)) then selected -=1 end
+  if (btnp(3)) then selected +=1 end
+
+  if (selected < 1) then selected =1
+    elseif  (selected > #options) then selected = #options end
+    if (btnp(5)) then 
+     game.state = 1
+     game.options.draw = 0
+     return selected 
+    else
+      return 0
+    end
+  end
+
 
 -- a* pathfinding based on the work of @richy486
 function a_getpath(start, goal) -- returns path{x,y}

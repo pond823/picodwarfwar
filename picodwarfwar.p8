@@ -13,13 +13,33 @@ __lua__
 	game.dx =0 --world view delta change
 	game.dy =0 
 	game.timer = 1
- game.tick = 1
- game.selected_structure = nil
- game.path = nil
- game.options={}
- game.options.draw =0
+ 	game.tick = 1
+ 	game.selected_structure = nil
+ 	game.path = nil
+ 	game.options={}
+ 	game.options.draw =0
 
- options = {"train warriors", "build smithy", "build armoury", "move resources"}
+ function train_warriors( ... )
+
+end
+
+function build_smithy( ... )
+	game.selected_structure.smithy = 1
+end
+
+ options = {}
+ castle_options = {
+ 	{ 
+ 		display = "train warriors",
+ 		func = train_warriors
+	},
+	{
+		display = "build smithy",
+		func = build_smithy
+	}
+ }
+
+ option_type = 0
  selected = 1
 	sprites = {}
 	structures ={}
@@ -37,7 +57,7 @@ __lua__
 	function _init( ... )
 		printh("initialising", "log.txt", true)
 		create_initial_castle()
-  create_initial_dwarves()
+  		create_initial_dwarves()
 		new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
 		calculate_total()
   game.path = a_getpath({structures[1].x, structures[1].y},{structures[2].x, structures[2].y} )
@@ -47,8 +67,8 @@ __lua__
 	end
 	
 	function _update()
-  		if (game.state == 1) map_select()
-    if (game.state == 2) select_options()
+  	if (game.state == 1) map_select()
+    if (game.state == 2) update_options()
 	end
 
 	function _draw()
@@ -64,6 +84,8 @@ __lua__
 		build = 1, -- castle
 		owner = 1, --player
 		spr = 18, --sprite to display
+		smithy = 0,
+		armoury = 0,
 		resources = {
 			food = 0,
 			stone = 0,
@@ -80,19 +102,18 @@ __lua__
 		build = 1, -- castle
 		owner =1,
 		spr = 18,
+		smithy = 0,
+		armoury = 0,
 		resources = {
 			food = 0,
 			stone = 0,
 			wood = 0,
 			iron = 0
-			}	
+			},	
+
 		}
 		castle2.name = random_castle()
 		add (structures, castle2)
-		log("castle")
-		log(structures[1].name.." "..structures[1].x.."/"..structures[1].y)
-		log("castle2")
-		log(structures[2].name.." "..structures[2].x.."/"..structures[2].y)
 	end
 
  function create_initial_dwarves() 
@@ -150,11 +171,27 @@ __lua__
 
 	end
 
+	function update_options()
+		local selected_option = select_options()
+		if (option_type == 1) then
+			game.state = 1
+		end
+	end
+
  function select_action()
   game.options.draw = 1
   game.state = 2
-   -- draw code
-
+  if (game.selected_structure != nil and game.selected_army != nil) then 
+  	--options = {"select castle", "select army"}
+  	option_type =1
+  elseif (game.selected_structure != nil) then
+ 	--options = {"train warriors", "build smithy", "build armoury", "move resources"}
+ 	options = castle_options
+ 	option_type = 2
+ 	elseif (game.selected_army != nil) then
+ 		--options = {"move", "patrol"}
+ 		option_type = 3
+ 	end
  end
 
 
@@ -181,13 +218,16 @@ __lua__
 	end
 
 	function draw_message_box()
-		rect(0,81,127,127,2)
-  if(game.selected_structure != nil) then 
-   print(game.selected_structure.name, 2,83, 5)
-   draw_resources(0,90, game.selected_structure.resources)
-   local army = army_at_structure(game.selected_structure)
-   if (army != nil) draw_army_info( 32, 90, army)
-  end
+	rect(0,81,127,127,2)
+  	if(game.selected_structure != nil) then 
+	  	local heading = game.selected_structure.name
+	   if (game.selected_structure.smithy > 0) heading = heading .. " smithy"
+	   print(heading, 2,83, 5)
+
+	   draw_resources(0,90, game.selected_structure.resources)
+	   local army = army_at_structure(game.selected_structure)
+	   if (army != nil) draw_army_info( 32, 90, army)
+	  end
 	end
 
 	function draw_info_box()
@@ -250,7 +290,6 @@ end
 
  function structure_at_location(x,y)
   for i=1,#structures do
-   log("structs "..structures[i].name)
    if (structures[i].x == x and structures[i].y == y) return structures[i]
   end
  end
@@ -403,9 +442,9 @@ function draw_options()
     rect(ox-7,oy-1,ox+65,65+((#options * 6)/2),2)
     for n= 1,#options do
       if (selected == n) then
-        print(">"..options[n],ox-6,oy,9)
+        print(">"..options[n].display,ox-6,oy,9)
       else 
-        print(options[n],ox,oy,12)
+        print(options[n].display,ox,oy,12)
       end
       oy += 6
     end
@@ -423,11 +462,15 @@ function select_options()
     if (btnp(5)) then 
      game.state = 1
      game.options.draw = 0
+     options[selected].func()
+     options={}
      return selected 
     else
       return 0
     end
   end
+
+
 
 
 -- a* pathfinding based on the work of @richy486
@@ -463,7 +506,6 @@ function a_getpath(start, goal) -- returns path{x,y}
   end
  end
 
- printh("find goal..")
  current = came_from[a_vectoindex(goal)]
  path = {}
  local cindex = a_vectoindex(current)

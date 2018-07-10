@@ -120,8 +120,8 @@ function create_initial_dwarves()
 	 	if (btnp(1)) game.cursor.x+=1 
 	 	if (btnp(2)) game.cursor.y-=1 
 	 	if (btnp(3)) game.cursor.y+=1
-   game.selected_structure = structure_at_location(game.cursor.x, game.cursor.y)
-   game.selected_army = army_at_location(game.cursor.x, game.cursor.y)
+   game.selected_structure = structure_at_location(game.cursor.x+game.dx, game.cursor.y+game.dy)
+   game.selected_army = army_at_location(game.cursor.x+game.dx, game.cursor.y+game.dy)
 
    if (btnp(4)) select_action()
 
@@ -191,21 +191,22 @@ function create_initial_dwarves()
 		rect((structure.x*8)-1 - game.dx*8,(structure.y*8)-1- game.dy*8, (structure.x*8)+7- game.dx*8, (structure.y*8)+7- game.dy*8,8) 
 	end
 
-	function draw_message_box()
-	rect(0,81,127,127,2)
-  	if(game.selected_structure != nil) then 
-	  	local heading = game.selected_structure.name
-	   if (game.selected_structure.smithy > 0) heading = heading .. " smithy"
-	   print(heading, 2,83, 5)
-	   local army = army_at_structure(game.selected_structure)
-	   if (army != nil) draw_army_info( 2, 90, army)
-	  end
-	end
+function draw_message_box()
+  rect(0,81,127,127,2)
+  if(game.selected_structure != nil) then 
+    local heading = game.selected_structure.name
+    if (game.selected_structure.smithy > 0) heading = heading .. " smithy"
+    print(heading, 2,83, 5)
+    local army = army_at_structure(game.selected_structure)
+    if (army != nil) draw_army_info( 2, 90, army)
+  end
+  if (game.selected_army != nil) draw_army_info( 2, 90, game.selected_army)
+end
 
-	function draw_info_box()
-		rect(80,0,127,81,2)
-		draw_resources(81,0, totals.resources)
-	end
+function draw_info_box()
+  rect(80,0,127,81,2)
+  draw_resources(81,0, totals.resources)
+end
 
  function draw_resources(x,y, resources)
   spr(50, x,y)
@@ -226,15 +227,18 @@ function create_initial_dwarves()
   end
  end
 
- function draw_army(army)
- if (army != nil) then
-  local atcastle = false
-   for i = 1, #structures do
-    if (structures[i].x == army.x and structures[i].y == army.y) atcastle = true
-    if (atcastle == false)  spr(21, army.x*8 - game.dx*8, army.y*8 - game.dy*8)
-   end
+function draw_army(army)
+  if (army != nil) then
+    local atcastle = false
+   
+    if (structure_at_location(army.x, army.y) != nil) atcastle = true
+    if (atcastle == false) then 
+      local ax =  army.x*8 - game.dx*8
+      local ay = army.y*8 - game.dy*8
+      if ((ax >0 and ax <80) and (ay >0 and ay <80)) spr(21, ax, ay)
+    end
   end
- end
+end
 
  function draw_army_info(x,y,army) 
   if(army != nil) then
@@ -461,17 +465,23 @@ function split_army(...)
   
   if (game.selected_army != nil) then
     local new_army = {
-    x = game.selected_army.x+1,
-    y = game.selected_army.y+1,
-    moves = 4,
-    warriors = flr(game.selected_army.warriors/2),
-    elves = flr(game.selected_army.elves/2),
-    dragons = flr(game.selected_army.dragons/2),
-    weapons = flr(game.selected_army.weapons/2),
-    armour = flr(game.selected_army.armour/2)
-  }
-  add(armies,new_army)
-  clear_options()
+      x = game.selected_army.x+1,
+      y = game.selected_army.y+1,
+      moves = 4,
+      warriors = flr(game.selected_army.warriors/2),
+      elves = flr(game.selected_army.elves/2),
+      dragons = flr(game.selected_army.dragons/2),
+      weapons = flr(game.selected_army.weapons/2),
+      armour = flr(game.selected_army.armour/2)
+    }
+    -- -flr(-x) is ceiling(x)
+    game.selected_army.warriors = -flr(-game.selected_army.warriors/2)
+    game.selected_army.elves = -flr(-game.selected_army.elves/2)
+    game.selected_army.dragons = -flr(-game.selected_army.dragons/2)
+    game.selected_army.weapons = -flr(-game.selected_army.weapons/2)
+    game.selected_army.armour = -flr(-game.selected_army.armour/2)
+    add(armies,new_army)
+    clear_options()
   end
 end
 

@@ -20,55 +20,7 @@ game.options={}
 game.options.draw =0
 
  options = {}
- castle_options = {
- 	{ 
- 		display = "train warriors",
- 		func = train_warriors
-	},
-	{
-		display = "build smithy",
-		func = build_smithy
-	},
-  {
-		display = "build armoury",
-		func = build_smithy
-	},
-  {
-		display = "form army",
-		func = build_smithy
-  }
- }
-
-army_options = {
-  { 
-    display = "move",
-    func = train_warriors
-  },
-  {
-    display = "fortify castle",
-    func = build_smithy
-  },
-  {
-    display = "build castle",
-    func = build_smithy
-  },
-  {
-    display = "split",
-    func = build_smithy
-  }
-}
-
-multi_options = {
-  { 
-    display = "select castle",
-    func = select_castle_option
-  },
-  {
-    display = "select army",
-    func = selected_army_option
-  }
-}
-
+ 
 option_type = 0
 selected = 1
 sprites = {}
@@ -86,6 +38,7 @@ totals = {
 
 function _init( ... )
   printh("initialising", "log.txt", true)
+  create_options()
   create_initial_castle()
   create_initial_dwarves()
   new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
@@ -138,7 +91,7 @@ function create_initial_dwarves()
     x = structures[1].x,
     y = structures[1].y,
     moves = 4,
-    warriors = 2,
+    warriors = 5,
     elves = 1,
     dragons = 1,
     weapons = 3,
@@ -159,7 +112,7 @@ function create_initial_dwarves()
  end
 
 
-	--update functions
+--update functions
 	function map_select()
 		update_timer()
 		foreach(sprites, update_sprite)
@@ -472,10 +425,7 @@ function select_options()
   if (selected < 1) then selected =1
     elseif  (selected > #options) then selected = #options end
     if (btnp(5)) then 
-     
-
      options[selected].func()
-
      return selected 
     else
       return 0
@@ -505,6 +455,76 @@ end
 function selected_army_option (...)
   game.selected_structure = nil
   options = army_options
+end
+
+function split_army(...)
+  
+  if (game.selected_army != nil) then
+    local new_army = {
+    x = game.selected_army.x+1,
+    y = game.selected_army.y+1,
+    moves = 4,
+    warriors = flr(game.selected_army.warriors/2),
+    elves = flr(game.selected_army.elves/2),
+    dragons = flr(game.selected_army.dragons/2),
+    weapons = flr(game.selected_army.weapons/2),
+    armour = flr(game.selected_army.armour/2)
+  }
+  add(armies,new_army)
+  clear_options()
+  end
+end
+
+function create_options()
+
+  castle_options = {
+    { 
+      display = "train warriors",
+      func = train_warriors
+    },
+    {
+      display = "build smithy",
+      func = build_smithy
+    },
+    {
+      display = "build armoury",
+      func = build_smithy
+    },
+    {
+      display = "form army",
+      func = build_smithy
+    }
+  }
+
+  army_options = {
+    { 
+      display = "move",
+      func = train_warriors
+    },
+    {
+      display = "fortify castle",
+      func = build_smithy
+    },
+    {
+      display = "build castle",
+      func = build_smithy
+    },
+    {
+      display = "split",
+      func = split_army
+    }
+  }
+
+  multi_options = {
+    { 
+      display = "select castle",
+      func = select_castle_option
+    },
+    {
+      display = "select army",
+      func = selected_army_option
+    }
+  }
 end
 
 

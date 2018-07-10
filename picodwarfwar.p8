@@ -4,45 +4,20 @@ __lua__
 --pico dwarf war
 --by sasha bilton
 	
-	game={}
-	game.state = 1
-	game.cursor = {}
-	game.cursor.x = 8
-	game.cursor.y = 8
-	game.cursor.inc = 8
-	game.dx =0 --world view delta change
-	game.dy =0 
-	game.timer = 1
- 	game.tick = 1
- 	game.selected_structure = nil
- 	game.path = nil
- 	game.options={}
- 	game.options.draw =0
-
-function clear_options()
-  game.state = 1
-  options={}
-  game.options.draw = 0
-end
-
-function train_warriors( ... )
-  clear_options()
-
-end
-
-function build_smithy( ... )
-  clear_options()
-end
-
-function select_castle_option (...)
-  game.selected_army = nil
-  options = castle_options
-end
-
-function selected_army_option (...)
-  game.selected_structure = nil
-  options = army_options
-end
+game={}
+game.state = 1
+game.cursor = {}
+game.cursor.x = 8
+game.cursor.y = 8
+game.cursor.inc = 8
+game.dx =0 --world view delta change
+game.dy =0 
+game.timer = 1
+game.tick = 1
+game.selected_structure = nil
+game.path = nil
+game.options={}
+game.options.draw =0
 
  options = {}
  castle_options = {
@@ -65,119 +40,119 @@ end
  }
 
 army_options = {
- 	{ 
- 		display = "move",
- 		func = train_warriors
-	},
-	{
-		display = "fortify castle",
-		func = build_smithy
-	},
+  { 
+    display = "move",
+    func = train_warriors
+  },
   {
-		display = "build castle",
-		func = build_smithy
-	},
+    display = "fortify castle",
+    func = build_smithy
+  },
   {
-		display = "split",
-		func = build_smithy
+    display = "build castle",
+    func = build_smithy
+  },
+  {
+    display = "split",
+    func = build_smithy
   }
- }
+}
 
- multi_options = {
- 	{ 
- 		display = "select castle",
- 		func = select_castle_option
-	},
-	{
-		display = "select army",
-		func = selected_army_option
-	}
- }
+multi_options = {
+  { 
+    display = "select castle",
+    func = select_castle_option
+  },
+  {
+    display = "select army",
+    func = selected_army_option
+  }
+}
 
- option_type = 0
- selected = 1
-	sprites = {}
-	structures ={}
-	totals = {
-		resources = {
-			food = 0,
-			stone = 0,
-			wood = 0,
-			iron = 0
-		}
-	}
+option_type = 0
+selected = 1
+sprites = {}
+structures ={}
+totals = {
+  resources = {
+      food = 0,
+      stone = 0,
+      wood = 0,
+      iron = 0
+    }
+}
 
  armies={}
 
-	function _init( ... )
-		printh("initialising", "log.txt", true)
-		create_initial_castle()
-  		create_initial_dwarves()
-		new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
-		calculate_total()
+function _init( ... )
+  printh("initialising", "log.txt", true)
+  create_initial_castle()
+  create_initial_dwarves()
+  new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
+  calculate_total()
   game.path = a_getpath({structures[1].x, structures[1].y},{structures[2].x, structures[2].y} )
   log("path size "..#game.path)
   log("dwarves "..armies[1].warriors)
   log("castle 1 "..structures[1].x.."/"..structures[1].y)
-	end
+end
 	
-	function _update()
-  	if (game.state == 1) map_select()
-    if (game.state == 2) update_options()
-	end
+function _update()
+  if (game.state == 1) map_select()
+  if (game.state == 2) update_options()
+end
 
-	function _draw()
-		cls()
-		draw_map_view()
-	end
+function _draw()
+  cls()
+  draw_map_view()
+end
 
 	--init functions
-	function create_initial_castle()
-		local castle = {
-		x = 8,
-		y = 3,
-		build = 1, -- castle
-		owner = 1, --player
-		spr = 18, --sprite to display
-		smithy = 0,
-		armoury = 0,
-		}
-		castle.name = random_castle()
-		add (structures, castle)
+function create_initial_castle()
+  local castle = {
+    x = 8,
+    y = 3,
+    build = 1, -- castle
+    owner = 1, --player
+    spr = 18, --sprite to display
+    smithy = 0,
+    armoury = 0,
+  }
+  castle.name = random_castle()
+  add (structures, castle)
 
-		local castle2 = {
-		x = 5,
-		y = 7,
-		build = 1, -- castle
-		owner =1,
-		spr = 18,
-		smithy = 0,
-		armoury = 0,
-		}
-		castle2.name = random_castle()
-		add (structures, castle2)
-	end
+  local castle2 = {
+    x = 5,
+    y = 7,
+    build = 1, -- castle
+    owner =1,
+    spr = 18,
+    smithy = 0,
+    armoury = 0,
+  }
+  castle2.name = random_castle()
+  add (structures, castle2)
+end
 
- function create_initial_dwarves() 
+function create_initial_dwarves() 
   local dwarf = {
-   x = structures[1].x,
-   y = structures[1].y,
-   moves = 4,
-   warriors = 2,
-   elves = 1,
-   dragons = 1,
-   weapons = 3,
-   armour = 2
+    x = structures[1].x,
+    y = structures[1].y,
+    moves = 4,
+    warriors = 2,
+    elves = 1,
+    dragons = 1,
+    weapons = 3,
+    armour = 2
   }
   local dwarf2 = {
-   x = structures[1].x+1,
-   y = structures[1].y+1,
-   moves = 4,
-   warriors = 5,
-   elves = 0,
-   dragons = 0,
-   weapons = 0,
-   armour = 0
+    x = structures[1].x+1,
+    y = structures[1].y+1,
+    moves = 4,
+    warriors = 5,
+    elves = 0,
+    dragons = 0,
+    weapons = 0,
+    armour = 0
   }
   add(armies,dwarf)
   add(armies,dwarf2)
@@ -507,6 +482,30 @@ function select_options()
     end
   end
 
+function clear_options()
+  game.state = 1
+  options={}
+  game.options.draw = 0
+end
+
+function train_warriors( ... )
+  clear_options()
+
+end
+
+function build_smithy( ... )
+  clear_options()
+end
+
+function select_castle_option (...)
+  game.selected_army = nil
+  options = castle_options
+end
+
+function selected_army_option (...)
+  game.selected_structure = nil
+  options = army_options
+end
 
 
 

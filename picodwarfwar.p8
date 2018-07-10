@@ -19,12 +19,29 @@ __lua__
  	game.options={}
  	game.options.draw =0
 
- function train_warriors( ... )
+function clear_options()
+  game.state = 1
+  options={}
+  game.options.draw = 0
+end
+
+function train_warriors( ... )
+  clear_options()
 
 end
 
 function build_smithy( ... )
-	game.selected_structure.smithy = 1
+  clear_options()
+end
+
+function select_castle_option (...)
+  game.selected_army = nil
+  options = castle_options
+end
+
+function selected_army_option (...)
+  game.selected_structure = nil
+  options = army_options
 end
 
  options = {}
@@ -36,6 +53,44 @@ end
 	{
 		display = "build smithy",
 		func = build_smithy
+	},
+  {
+		display = "build armoury",
+		func = build_smithy
+	},
+  {
+		display = "form army",
+		func = build_smithy
+  }
+ }
+
+army_options = {
+ 	{ 
+ 		display = "move",
+ 		func = train_warriors
+	},
+	{
+		display = "fortify castle",
+		func = build_smithy
+	},
+  {
+		display = "build castle",
+		func = build_smithy
+	},
+  {
+		display = "split",
+		func = build_smithy
+  }
+ }
+
+ multi_options = {
+ 	{ 
+ 		display = "select castle",
+ 		func = select_castle_option
+	},
+	{
+		display = "select army",
+		func = selected_army_option
 	}
  }
 
@@ -112,15 +167,20 @@ end
    elves = 1,
    dragons = 1,
    weapons = 3,
-   armour = 2,
-   resources = {
-    food = 10,
-    stone = 0,
-    wood = 0,
-    iron = 0
-   } 
+   armour = 2
+  }
+  local dwarf2 = {
+   x = structures[1].x+1,
+   y = structures[1].y+1,
+   moves = 4,
+   warriors = 5,
+   elves = 0,
+   dragons = 0,
+   weapons = 0,
+   armour = 0
   }
   add(armies,dwarf)
+  add(armies,dwarf2)
  end
 
 
@@ -161,7 +221,7 @@ end
 	function update_options()
 		local selected_option = select_options()
 		if (option_type == 1) then
-			game.state = 1
+			--game.state = 1
 		end
 	end
 
@@ -169,14 +229,13 @@ end
   game.options.draw = 1
   game.state = 2
   if (game.selected_structure != nil and game.selected_army != nil) then 
-  	--options = {"select castle", "select army"}
-  	option_type =1
+    options = multi_options 
+   	option_type =1
   elseif (game.selected_structure != nil) then
- 	--options = {"train warriors", "build smithy", "build armoury", "move resources"}
- 	options = castle_options
+  	options = castle_options
  	option_type = 2
  	elseif (game.selected_army != nil) then
- 		--options = {"move", "patrol"}
+    options = army_options
  		option_type = 3
  	end
  end
@@ -419,6 +478,7 @@ function draw_options()
     rect(ox-7,oy-1,ox+65,65+((#options * 6)/2),2)
     for n= 1,#options do
       if (selected == n) then
+        log(options[n].display)
         print(">"..options[n].display,ox-6,oy,9)
       else 
         print(options[n].display,ox,oy,12)
@@ -437,10 +497,10 @@ function select_options()
   if (selected < 1) then selected =1
     elseif  (selected > #options) then selected = #options end
     if (btnp(5)) then 
-     game.state = 1
-     game.options.draw = 0
+     
+
      options[selected].func()
-     options={}
+
      return selected 
     else
       return 0

@@ -86,12 +86,6 @@ end
 		spr = 18, --sprite to display
 		smithy = 0,
 		armoury = 0,
-		resources = {
-			food = 0,
-			stone = 0,
-			wood = 0,
-			iron = 0
-			}	
 		}
 		castle.name = random_castle()
 		add (structures, castle)
@@ -104,13 +98,6 @@ end
 		spr = 18,
 		smithy = 0,
 		armoury = 0,
-		resources = {
-			food = 0,
-			stone = 0,
-			wood = 0,
-			iron = 0
-			},	
-
 		}
 		castle2.name = random_castle()
 		add (structures, castle2)
@@ -223,10 +210,8 @@ end
 	  	local heading = game.selected_structure.name
 	   if (game.selected_structure.smithy > 0) heading = heading .. " smithy"
 	   print(heading, 2,83, 5)
-
-	   draw_resources(0,90, game.selected_structure.resources)
 	   local army = army_at_structure(game.selected_structure)
-	   if (army != nil) draw_army_info( 32, 90, army)
+	   if (army != nil) draw_army_info( 2, 90, army)
 	  end
 	end
 
@@ -389,7 +374,7 @@ end
 
 function calculate_total()
 	foreach(structures, structure_resources)
-	foreach(structures, total_resources)
+
 end
 
 function structure_resources(structure)
@@ -400,35 +385,27 @@ function structure_resources(structure)
 			local loc = mget(lx,ly)
 			-- 1 = plains, 2 = forest, 3= farmland, 4=hills, 5=mountains, 6=sea, 9= faerie ring, 10= cave 
 			-- calculate surround resources
-    structure.resources.food +=1 -- everything gives at least 1 food
+    totals.resources.food +=1 -- everything gives at least 1 food
     if (loc == 1) then
-      structure.resources.food +=1
-      structure.resources.wood +=1
+      totals.resources.food +=1
+      totals.resources.wood +=1
      elseif (loc == 2) then
-       structure.resources.wood +=3
+       totals.resources.wood +=3
      elseif (loc==3) then
-      structure.resources.food +=2
+      totals.resources.food +=2
      elseif (loc==4) then
-      structure.resources.iron +=2
-      structure.resources.stone +=1
+      totals.resources.iron +=2
+      totals.resources.stone +=1
      elseif (loc==5) then
-      structure.resources.iron +=1
-      structure.resources.stone +=3
+      totals.resources.iron +=1
+      totals.resources.stone +=3
      elseif (loc==6) then
-      structure.resources.food +=2
+      totals.resources.food +=2
      end
 		end
 	end
 end
 
-function total_resources(structure)
-	if (structure.owner==1) then
-		totals.resources.food += structure.resources.food
-		totals.resources.stone += structure.resources.stone
-		totals.resources.iron += structure.resources.iron
-		totals.resources.wood += structure.resources.wood
-	end
-end
 
 --
 -- options code

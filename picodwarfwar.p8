@@ -34,6 +34,11 @@ totals = {
     }
 }
 
+game.message ={}
+game.message.draw = 1
+game.message.text = {'welcome to', 'pico dwarf war', 'press x to continue'}
+
+
  armies={}
 
 function _init( ... )
@@ -123,8 +128,12 @@ function create_initial_dwarves()
    game.selected_structure = structure_at_location(game.cursor.x+game.dx, game.cursor.y+game.dy)
    game.selected_army = army_at_location(game.cursor.x+game.dx, game.cursor.y+game.dy)
 
-   if (btnp(4)) select_action()
+   if (btnp(4)) then
+    select_action()
 
+  end
+   if (btnp(5) and game.message.draw == 1) game.message.draw = 0
+  
    if (game.cursor.x<0) then 
     game.cursor.x=0 
     if (game.dx >0 ) game.dx-=1 
@@ -147,13 +156,11 @@ function create_initial_dwarves()
 	end
 
 	function update_options()
-		local selected_option = select_options()
-		if (option_type == 1) then
-			--game.state = 1
-		end
+    select_options()
 	end
 
  function select_action()
+
   game.options.draw = 1
   game.state = 2
   if (game.selected_structure != nil and game.selected_army != nil) then 
@@ -168,6 +175,10 @@ function create_initial_dwarves()
  	end
  end
 
+function cancel_action()
+  --game.options.draw = 0
+  game.state = 2
+end
 
 
 
@@ -176,14 +187,17 @@ function create_initial_dwarves()
 		game.msg = ""
 		map(game.dx,game.dy,0,0,10,10)
 		foreach(structures, draw_structures)
-  foreach(armies, draw_army)
+    foreach(armies, draw_army)
 		--spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
 		draw_message_box()
 		draw_info_box()
-  draw_path()
-  foreach(sprites, sprite_draw)
-
-  if (game.options.draw == 1) draw_options()
+    draw_path()
+    foreach(sprites, sprite_draw)
+    if (game.options.draw == 1) then 
+      draw_options()
+      log("log action")
+    end
+    if (game.message.draw == 1) draw_message()
 	end
 
 	function draw_structures( structure )
@@ -402,7 +416,8 @@ end
 -- options code
 --
 function draw_options()
-  
+
+
   if (#options>0) then
     oy = (64 - (#options * 6)/2)
     ox = 32
@@ -423,18 +438,20 @@ end
 
 function select_options()
 
-  if (btnp(2)) then selected -=1 end
-  if (btnp(3)) then selected +=1 end
+  if (btnp(2)) selected -=1 
+  if (btnp(3)) selected +=1 
 
-  if (selected < 1) then selected =1
-    elseif  (selected > #options) then selected = #options end
-    if (btnp(5)) then 
-     options[selected].func()
-     return selected 
-    else
-      return 0
-    end
+  if (selected < 1) then  
+    selected =1
+  elseif (selected > #options) then 
+    selected = #options 
   end
+    
+  if (btnp(5)) then 
+    options[selected].func()
+   end
+  if (btnp(4)) clear_options() -- cancel
+ end
 
 function clear_options()
   game.state = 1
@@ -444,6 +461,7 @@ end
 
 function train_warriors( ... )
   clear_options()
+
 
 end
 
@@ -485,6 +503,7 @@ function split_army(...)
   end
 end
 
+-- must go after option functions in code
 function create_options()
 
   castle_options = {
@@ -537,6 +556,21 @@ function create_options()
   }
 end
 
+--pop up message
+
+function draw_message()
+  local message = game.message.text
+  if (#message>0) then
+    oy = (64 - (#message * 6)/2)
+    ox = 16
+    rectfill(ox-7,oy-2,ox+98,65+((#message * 6)/2),0)
+    rect(ox-7,oy-2,ox+98,65+((#message * 6)/2),2)
+    for n= 1,#message do
+      print(message[n],ox,oy,12)
+      oy += 6
+    end
+  end
+end
 
 
 -- a* pathfinding based on the work of @richy486

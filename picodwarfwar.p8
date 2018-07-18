@@ -43,15 +43,11 @@ game.message.text = {'welcome to', 'pico dwarf war', 'press x to continue'}
 function _init( ... )
   printh("initialising", "log.txt", true)
   create_options()
-  log("starting o = "..#options)
   create_initial_castle()
   create_initial_dwarves()
   new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
   calculate_total()
-  game.path = a_getpath({structures[1].x, structures[1].y},{structures[2].x, structures[2].y} )
-  log("path size "..#game.path)
-  log("dwarves "..armies[1].warriors)
-  log("castle 1 "..structures[1].x.."/"..structures[1].y)
+  --game.path = a_getpath({structures[1].x, structures[1].y},{structures[2].x, structures[2].y} )
 end
 	
 function _update()
@@ -129,7 +125,6 @@ function create_initial_dwarves()
    game.selected_army = army_at_location(game.cursor.x+game.dx, game.cursor.y+game.dy)
 
    if (btnp(4)) then
-    log("call select_action")
     select_action()
 
   end
@@ -153,12 +148,9 @@ function create_initial_dwarves()
    end
    sprites[1].x = game.cursor.x*game.cursor.inc
    sprites[1].y = game.cursor.y*game.cursor.inc
-
 	end
 
  function select_action()
-
-  log("pre o = "..#options)
   game.options.draw = 1
   game.state = 2
   if (game.selected_structure != nil and game.selected_army != nil) then 
@@ -171,12 +163,7 @@ function create_initial_dwarves()
   elseif (game.selected_structure == nil and game.selected_army == nil) then
     options = game_options
  	end
-
-  log("post o = "..#options)
   flush_btn4 = 1
- 
-  
-
 end
 
 function cancel_action()
@@ -197,12 +184,8 @@ end
 		draw_info_box()
     --draw_path()
     foreach(sprites, sprite_draw)
-    log(game.options.draw)
-    if (game.options.draw == 1) then 
-      log("draw o = "..#options)
-      draw_options()
 
-    end
+    if (game.options.draw == 1) draw_options()
     if (game.message.draw == 1) draw_message()
 	end
 
@@ -423,7 +406,6 @@ end
 --
 function draw_options()
 
-  log("options "..#options)
   if (#options>0) then
     
     oy = (64 - (#options * 6)/2)
@@ -432,7 +414,6 @@ function draw_options()
     rect(ox-7,oy-1,ox+65,65+((#options * 6)/2),2)
     for n= 1,#options do
       if (selected == n) then
-        log(options[n].display)
         print(">"..options[n].display,ox-6,oy,9)
       else 
         print(options[n].display,ox,oy,12)
@@ -458,14 +439,13 @@ function select_options()
     log("calling "..options[selected].display)
     options[selected].func()
   end
-  log("flush_btn4 = "..flush_btn4)
+  -- flush_btn4 used to debounce btnp(4) as the first press is still in buffer  
   if (btnp(4) and flush_btn4 == 0) clear_options() -- cancel
   if (btnp(4) and flush_btn4 == 1) flush_btn4 = 0
  
 end
 
 function clear_options()
-  log("clear options")
   game.state = 1
   options={}
   game.options.draw = 0
@@ -516,12 +496,10 @@ function split_army(...)
 end
 
 function next_turn(...) 
-  log("next turn")
   clear_options()
 end
 
 function end_game(...)
-  log("exit")
   stop()
 end
 

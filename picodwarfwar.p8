@@ -16,12 +16,11 @@ game.timer = 1
 game.tick = 1
 game.selected_structure = nil
 game.path = nil
-game.options={}
-game.options.draw =0
 
- options = {}
- 
-option_type = 0
+game.options={}
+game.options.draw = 0
+options = {}
+flush_btn4 = 0
 selected = 1
 sprites = {}
 structures ={}
@@ -44,6 +43,7 @@ game.message.text = {'welcome to', 'pico dwarf war', 'press x to continue'}
 function _init( ... )
   printh("initialising", "log.txt", true)
   create_options()
+  log("starting o = "..#options)
   create_initial_castle()
   create_initial_dwarves()
   new_sprite(game.cursor.x,game.cursor.y,10,{32,33}, 1, 0, 0) -- test animations are working
@@ -56,7 +56,7 @@ end
 	
 function _update()
   if (game.state == 1) map_select()
-  if (game.state == 2) update_options()
+  if (game.state == 2) select_options()
 end
 
 function _draw()
@@ -129,6 +129,7 @@ function create_initial_dwarves()
    game.selected_army = army_at_location(game.cursor.x+game.dx, game.cursor.y+game.dy)
 
    if (btnp(4)) then
+    log("call select_action")
     select_action()
 
   end
@@ -155,25 +156,28 @@ function create_initial_dwarves()
 
 	end
 
-	function update_options()
-    select_options()
-	end
-
  function select_action()
 
+  log("pre o = "..#options)
   game.options.draw = 1
   game.state = 2
   if (game.selected_structure != nil and game.selected_army != nil) then 
     options = multi_options 
-   	option_type =1
   elseif (game.selected_structure != nil) then
   	options = castle_options
- 	option_type = 2
  	elseif (game.selected_army != nil) then
     options = army_options
- 		option_type = 3
+
+  elseif (game.selected_structure == nil and game.selected_army == nil) then
+    options = game_options
  	end
- end
+
+  log("post o = "..#options)
+  flush_btn4 = 1
+ 
+  
+
+end
 
 function cancel_action()
   --game.options.draw = 0
@@ -191,11 +195,13 @@ end
 		--spr(32, game.cursor.x*game.cursor.inc, game.cursor.y*game.cursor.inc)
 		draw_message_box()
 		draw_info_box()
-    draw_path()
+    --draw_path()
     foreach(sprites, sprite_draw)
+    log(game.options.draw)
     if (game.options.draw == 1) then 
+      log("draw o = "..#options)
       draw_options()
-      log("log action")
+
     end
     if (game.message.draw == 1) draw_message()
 	end
@@ -417,8 +423,9 @@ end
 --
 function draw_options()
 
-
+  log("options "..#options)
   if (#options>0) then
+    
     oy = (64 - (#options * 6)/2)
     ox = 32
     rectfill(ox-7,oy-1,ox+65,65+((#options * 6)/2),0)
@@ -447,13 +454,18 @@ function select_options()
     selected = #options 
   end
     
-  if (btnp(5)) then 
+  if (btnp(5)) then
+    log("calling "..options[selected].display)
     options[selected].func()
-   end
-  if (btnp(4)) clear_options() -- cancel
- end
+  end
+  log("flush_btn4 = "..flush_btn4)
+  if (btnp(4) and flush_btn4 == 0) clear_options() -- cancel
+  if (btnp(4) and flush_btn4 == 1) flush_btn4 = 0
+ 
+end
 
 function clear_options()
+  log("clear options")
   game.state = 1
   options={}
   game.options.draw = 0
@@ -501,6 +513,16 @@ function split_army(...)
     add(armies,new_army)
     clear_options()
   end
+end
+
+function next_turn(...) 
+  log("next turn")
+  clear_options()
+end
+
+function end_game(...)
+  log("exit")
+  stop()
 end
 
 -- must go after option functions in code
@@ -554,6 +576,19 @@ function create_options()
       func = selected_army_option
     }
   }
+
+  game_options = {
+  {  
+      display = "next turn",
+      func = next_turn
+    },
+    {
+      display = "end game",
+      func = end_game
+    }
+  }
+
+  options = game_options
 end
 
 --pop up message
